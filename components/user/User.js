@@ -28,7 +28,8 @@ const styles = StyleSheet.create({
     userContainer: {
         height: 'auto',
         flexDirection: "row",
-        padding: 20,
+        paddingHorizontal: 20,
+        paddingTop: 20,
         alignItems: 'center'
     },
     userImage: {
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
     },
     addressContainer: {
         backgroundColor: '#fff',
-        borderRadius: 6,
+        borderRadius: 10,
         marginHorizontal: 10
     },
     shippingTypeContainer: {

@@ -2,6 +2,8 @@ import { useNavigation } from "@react-navigation/native";
 import { use, useEffect, useRef, useState } from "react";
 import { View, Image, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Keyboard } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import * as Location from 'expo-location';
+
 
 
 export default function Address({isMain}) {
@@ -13,9 +15,49 @@ export default function Address({isMain}) {
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [editable, setEditable] = useState(false);
     const shouldFetch = useRef(true);
+    const [location, setLocation] = useState(null);
 
     const handleChangeText = (query) => {
         setQuery(query);
+    }
+
+    const getLocation = async () => {
+        try {
+            const {status} = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                console.log("Permission to access location was denied");
+                return;
+            }
+            const location = await Location.getCurrentPositionAsync({});
+            console.log("Location: ", location);
+            setLocation(location);
+            fetchMyLocation(location.coords.latitude, location.coords.longitude);
+        } catch (error) {
+            console.error("Error getting location", error);
+        }
+    }
+
+    const fetchMyLocation = async (latitude, longitude) => {
+        setLoading(true);
+        try {
+            const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+            console.log(url)
+            const res = await fetch(url, {
+                method: "GET",
+                headers: {
+                    // Nominatim yêu cầu bạn cung cấp tên app + email để liên hệ nếu cần
+                    "User-Agent": "FoodApp/1.0 (lhphuc.2410@gmail.com)",
+                    "Accept-Language": "vi",
+                }
+            });
+            const data = await res.json();
+            setQuery(formatAddress(data));
+            console.log(data);
+        } catch (error) {
+            console.error("Fail to fetch data", error);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const handleFetchAddress = async (query) => {
@@ -148,31 +190,43 @@ export default function Address({isMain}) {
                     <Text style={styles.addressText}>97 Man Thiện</Text>
                     <View style={styles.editIcon} />
                 </TouchableOpacity>
-                ) : (<View
-                    style={styles.address}>
-                    <Ionicons style={styles.addressIcon} name="location" />
-                    <TextInput
-                        style={styles.addressText}
-                        placeholder="Nhập địa chỉ của bạn"
-                        value={query}
-                        onChangeText={(query) => {
-                            handleChangeText(query);
-                        } }
-                        onFocus={() => {
-                            setEditable(true);
-                        }}
-                    />
-                   {editable ? (
-                    <TouchableOpacity 
-                    onPress={() => {
-                        setQuery("")
-                    }}>
-                        <Ionicons style={styles.editIcon} name="close" />
+                ) : 
+                (<>
+                    <View
+                        style={styles.address}>
+                        <Ionicons style={styles.addressIcon} name="location" />
+                        <TextInput
+                            style={styles.addressText}
+                            placeholder="Nhập địa chỉ của bạn"
+                            value={query}
+                            onChangeText={(query) => {
+                                handleChangeText(query);
+                            } }
+                            onFocus={() => {
+                                setEditable(true);
+                            } } />
+                        {editable ? (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setQuery("");
+                                } }>
+                                <Ionicons style={styles.editIcon} name="close" />
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.editIcon} />
+                        )}
+                    </View>
+                    {editable && (
+                    <TouchableOpacity
+                    onPress={getLocation}
+                    style = {styles.myLocation}>
+                        <Ionicons style={styles.addressIcon} name="location" />
+                        <Text style = {[styles.addressText, {color: "red", fontWeight: "500"}]}>Truy cập vị trí của tôi</Text>
                     </TouchableOpacity>
-                   ): (
-                    <View style={styles.editIcon} />
-                   ) }
-                </View>)}
+                    )}
+                </>
+            
+            )}
                 
             </View>
         </View>
@@ -246,7 +300,8 @@ const styles = StyleSheet.create({
         fontSize: 18,
         paddingHorizontal: 10,
         justifyContent: "space-between",
-        paddingVertical: 10
+        paddingTop: 10,
+        paddingBottom: 10,
     },
     addressIcon: {
         color: 'red',
@@ -274,5 +329,11 @@ const styles = StyleSheet.create({
     },
     sugguestText: {
 
+    },
+    myLocation: {
+        paddingHorizontal: 10,
+        flexDirection: 'row',
+        paddingBottom: 10,
+        paddingTop: 5,
     }
 })
