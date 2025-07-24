@@ -3,6 +3,7 @@ import { use, useEffect, useRef, useState } from "react";
 import { View, Image, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Keyboard } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
+import Loading from "../Loading";
 
 
 
@@ -152,6 +153,7 @@ export default function Address({isMain}) {
         return () => clearTimeout(timer);
     }, [query])
 
+
     return (
         <><View style={styles.container}>
             {/* ---Address--- */}
@@ -240,6 +242,7 @@ export default function Address({isMain}) {
             keyboardShouldPersistTaps= "handled"
             />
         )}
+        <Loading visible={loading} />
         </>
 
     )

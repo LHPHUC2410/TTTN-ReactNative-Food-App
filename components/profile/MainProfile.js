@@ -1,20 +1,41 @@
-import { TouchableOpacity, View, Text, Image, StyleSheet } from "react-native";
+import { TouchableOpacity, View, Text, Image, StyleSheet, Button } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
+import ImagePickerComponent from "../uploadImage/ImagePickerComponent";
 
 
 export default function MainProfile() {
     const {user} = useAuth();
     const navigation = useNavigation();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+
+    const handleImageSelected = (uri) => {
+        // Handle the selected image URI
+        console.log("Selected image URI:", uri);
+        setSelectedImage(uri);
+    };
     return (
         <>
         {user ? (
             <View style= {styles.container}>
-                <Image 
-                    style = {styles.userImage}
-                    source= {{uri: 'https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg' }}
-                />
+                {selectedImage ? (
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
+                    <Image
+                        style={styles.userImage}
+                        source={{ uri: selectedImage }}
+                    />
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
+                    <Image 
+                        style={styles.userImage}
+                        source={{ uri: 'https://imgv3.fotor.com/images/slider-image/A-clear-close-up-photo-of-a-woman.jpg' }}
+                    />
+                    </TouchableOpacity>
+                )}
                 <Text style= {styles.userName}>{user && user.name ? user.name : "NONE"}</Text>
                 <TouchableOpacity
                     onPress={() => {
@@ -41,6 +62,11 @@ export default function MainProfile() {
             </TouchableOpacity>
         </View>
         )}
+        <ImagePickerComponent
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            onImageSelected={handleImageSelected}
+        />
         </>
     )
 }
